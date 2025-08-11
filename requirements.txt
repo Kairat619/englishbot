@@ -1,0 +1,5 @@
+/*************  ✨ Windsurf Command ⭐  *************/
+python-dotenv
+python-telegram-bot
+requests
+/*******  a28ba868-a955-471a-b967-4dc1400bebd4  *******/
