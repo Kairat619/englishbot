@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request
 from telegram import Bot, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, Filters, ContextTypes
 import requests
 from dotenv import load_dotenv
 
@@ -16,13 +16,12 @@ CHANNEL_INVITE_LINK = os.getenv("CHANNEL_INVITE_LINK")  # e.g., https://t.me/+ab
 def verify_purchase(receipt_code, telegram_username):
     url = "https://api.gumroad.com/v2/sales"
     headers = {"Authorization": f"Bearer {GUMROAD_ACCESS_TOKEN}"}
-    params = {"product_id": os.getenv("GUMROAD_PRODUCT_ID")}  # Get from Gumroad product settings
+    params = {"product_id": os.getenv("GUMROAD_PRODUCT_ID")}
     response = requests.get(url, headers=headers, params=params)
     
     if response.status_code == 200:
         sales = response.json().get("sales", [])
         for sale in sales:
-            # Check if receipt matches and Telegram username is in custom fields
             if sale.get("receipt") == receipt_code and telegram_username in sale.get("custom_fields", {}).get("Telegram ID", ""):
                 return True
     return False
@@ -60,10 +59,12 @@ def webhook():
     return "ok"
 
 if __name__ == "__main__":
-    # Set up Telegram bot
-    app.dispatcher = Application.builder().token(os.getenv("TELEGRAM_TOKEN")).build()
-    app.dispatcher.add_handler(CommandHandler("start", start))
-    app.dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # Set up Telegram bot application
+    application = Application.builder().token(os.getenv("TELEGRAM_TOKEN")).build()
+    app.dispatcher = application  # Store application for webhook processing
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(Filters.TEXT & ~Filters.COMMAND, handle_message))
     
-    # Run Flask app
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    # Run Flask app with gunicorn-compatible settings
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
