@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request
 from telegram import Bot, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, Filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import requests
 from dotenv import load_dotenv
 
@@ -27,12 +27,12 @@ def verify_purchase(receipt_code, telegram_username):
     return False
 
 # Telegram bot handlers
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes):
     await update.message.reply_text(
         "🎉 Welcome to English Accent Training! Please send your Gumroad receipt code to access the course."
     )
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context: ContextTypes):
     chat_id = update.message.chat_id
     text = update.message.text
     telegram_username = update.message.from_user.username or ""
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     application = Application.builder().token(os.getenv("TELEGRAM_TOKEN")).build()
     app.dispatcher = application  # Store application for webhook processing
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(Filters.TEXT & ~Filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Run Flask app with gunicorn-compatible settings
     port = int(os.getenv("PORT", 5000))
